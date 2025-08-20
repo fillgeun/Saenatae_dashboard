@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>새싹 프로그램 조짜기 경매 - 메인 대시보드 (수정판)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- [기존 스타일 그대로 유지] -->
+  <style>
+    :root {
+      --bg: #0f1320; --panel: #161b2e; --panel-2: #1d2440; --accent: #6ea8fe;
+      --accent-2: #22c55e; --warn: #f59e0b; --danger: #ef4444; --text: #e6e8ef;
+      --muted: #aab0c0; --border: #2a3150; --chip: #0b1022;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial;
+      background: linear-gradient(180deg, #0b0f1c 0%, #0f1320 100%); color: var(--text);
+    }
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 24px; border-bottom: 1px solid var(--border); background: rgba(22,27,46,0.9);
+      position: sticky; top: 0; z-index: 5; backdrop-filter: blur(6px);
+    }
+    header h1 { margin: 0; font-size: 20px; letter-spacing: 0.3px; }
+    header .stage { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+    header .stage .badge { padding: 4px 8px; border-radius: 10px; background: var(--chip); border: 1px solid var(--border); color: var(--text); }
+    main { padding: 18px 24px; display: grid; grid-template-columns: 320px 1fr 540px; gap: 16px; }
+    .panel { background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%); border: 1px solid var(--border); border-radius: 12px; padding: 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
+    .panel h2 { margin: 0 0 10px; font-size: 15px; color: #d6dcff; letter-spacing: 0.2px; }
+    .subtle { font-size: 12px; color: var(--muted); }
+    .row { display: flex; align-items: center; gap: 8px; }
+    .stack { display: flex; flex-direction: column; gap: 10px; }
+    .stack-md { display: flex; flex-direction: column; gap: 12px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .input, select, button, textarea { border-radius: 10px; border: 1px solid var(--border); background: #0b1022; color: var(--text); padding: 10px 12px; font-size: 14px; outline: none; }
+    textarea { resize: vertical; min-height: 70px; }
+    button { background: linear-gradient(180deg, #1c2a57 0%, #1a2350 100%); cursor: pointer; transition: transform .05s ease, filter .15s ease; }
+    button:hover { filter: brightness(1.05); }
+    button:active { transform: translateY(1px); }
+    .btn-accent { background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); border-color: #1e3a8a; }
+    .btn-green { background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%); border-color: #065f46; }
+    .btn-warn { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #92400e; }
+    .btn-danger { background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); border-color: #7f1d1d; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: var(--chip); border: 1px solid var(--border); color: var(--text); font-size: 12px; }
+    .table { width: 100%; border-collapse: collapse; font-size: 13px; overflow: hidden; border-radius: 10px; border: 1px solid var(--border); }
+    .table th, .table td { border-bottom: 1px solid var(--border); padding: 10px; text-align: left; }
+    .table th { background: rgba(11,16,34,0.7); color: #cbd5ff; font-weight: 600; }
+    .table tr:hover td { background: rgba(255,255,255,0.02); }
+    .log { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; line-height: 1.5; white-space: pre-wrap; background: #0b1022; padding: 10px; border-radius: 10px; border: 1px solid var(--border); height: 180px; overflow: auto; }
+    .section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .divider { height: 1px; background: var(--border); margin: 6px 0 2px; }
+    .hint { color: var(--muted); font-size: 12px; }
+    .pill { padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; background: #0b1022; color: #cbd5ff; }
+    .error { color: #ffb4b4; font-size: 12px; }
+    .ok { color: #b4ffd4; font-size: 12px; }
+    .badge-soft { background: rgba(34,197,94,0.15); color: #a7f3d0; padding: 3px 8px; border-radius: 8px; font-size: 12px; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-warn { background: rgba(245,158,11,0.15); color: #fde68a; padding: 3px 8px; border-radius: 8px; font-size: 12px; border: 1px solid rgba(245,158,11,0.3); }
+    .badge-muted { background: rgba(148,163,184,0.12); color: #d1d5db; padding: 3px 8px; border-radius: 8px; font-size: 12px; border: 1px solid rgba(148,163,184,0.24); }
+    .grid-cols { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .scroll-y { max-height: 340px; overflow: auto; padding-right: 4px; }
+    .inline-form { display: flex; gap: 6px; flex-wrap: wrap; }
+    .btn-mini { padding: 6px 10px; font-size: 12px; }
+    footer { padding: 12px 24px; color: var(--muted); border-top: 1px solid var(--border); background: rgba(22,27,46,0.9); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>자낳대 스타일 조짜기 경매 대시보드 · 메인</h1>
+    <div class="stage">
+      현재 단계: <span id="stageBadge" class="badge">대기</span>
+      <span class="hint">1) 조장 경매 → 2) 남은 선수 자율 선택</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- 좌측 패널: 설정 -->
+    <section class="panel stack">
+      <div class="section-title">
+        <h2>기본 설정</h2>
+        <span class="badge-muted">1회성 세션</span>
+      </div>
+      <div class="stack">
+        <div class="stack-md">
+          <label class="subtle">참가자(20명) 입력 · 줄바꿈으로 구분</label>
+          <textarea id="participantsInput" placeholder="홍길동&#10;김코딩&#10;박데이터&#10;이개발&#10;최분석"></textarea>
+          <div class="row hint">
+            <span>입력된 인원: <span id="participantCount">0</span>명</span>
+          </div>
+        </div>
+
+        <div class="stack-md">
+          <label class="subtle">조 설정</label>
+          <div class="grid-2">
+            <div class="stack">
+              <label class="subtle">조 개수</label>
+              <input type="number" id="teamCount" class="input" min="2" max="10" value="4" />
+            </div>
+            <div class="stack">
+              <label class="subtle">조당 목표 인원</label>
+              <input type="number" id="teamTargetSize" class="input" min="3" max="8" value="5" />
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="row">
+              <span class="subtle">조장 지정</span>
+              <span class="hint">참가자 입력 후 각 조의 조장 선택</span>
+            </div>
+            <div id="captainSelects" class="grid-cols"></div>
+            <div id="captainError" class="error" style="display:none;">조장 수가 조 개수와 일치하지 않습니다.</div>
+            <div id="captainOk" class="ok" style="display:none;">조장 설정이 완료되었습니다.</div>
+          </div>
+
+          <div class="row">
+            <button id="applyConfig" class="btn-accent">설정 적용 & 팀 생성</button>
+            <button id="resetAll" class="btn-danger">전체 초기화</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="stack-md">
+          <label class="subtle">단계 제어</label>
+          <div class="row">
+            <button id="startAuction" class="btn-green">경매 시작</button>
+            <button id="endAuction" class="btn-warn">경매 종료</button>
+            <button id="startFreeJoin" class="btn-accent">자율 선택 시작</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 중앙 패널: 경매 진행 -->
+    <section class="panel stack" style="width: 100%;">
+      <div class="section-title">
+        <h2>경매 진행</h2>
+        <span id="auctionState" class="badge-muted">대기</span>
+      </div>
+
+      <div class="stack">
+        <!-- 경매 큐 등록 - 조장 선택 제거 -->
+        <div class="panel" style="background: rgba(11,16,34,0.5);">
+          <div class="section-title">
+            <h2>매물 등록</h2>
+            <span class="hint">경매에 올릴 선수 선택</span>
+          </div>
+          <div class="inline-form">
+            <select id="chooseTarget" style="flex: 1;">
+              <option value="">매물(선수) 선택</option>
+            </select>
+            <button id="enqueueAuction" class="btn-accent">경매 큐에 추가</button>
+          </div>
+          <div class="scroll-y mt8" style="max-height: 150px;">
+            <table class="table">
+              <thead>
+                <tr><th>#</th><th>매물(선수)</th><th>상태</th><th>액션</th></tr>
+              </thead>
+              <tbody id="auctionQueueBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 현재 경매 -->
+        <div class="panel" style="background: rgba(11,16,34,0.5);">
+          <div class="section-title">
+            <h2>현재 경매</h2>
+            <span id="currentAuctionBadge" class="badge-muted">없음</span>
+          </div>
+          <div class="stack">
+            <div class="row" style="flex-wrap: wrap;">
+              <span class="chip">선수: <strong id="currentPlayer">-</strong></span>
+              <span class="chip">현재가: <strong id="currentBid">0</strong>p</span>
+              <span class="chip">최고 입찰자: <strong id="currentBidder">-</strong></span>
+            </div>
+            <div class="inline-form">
+              <select id="bidCaptain">
+                <option value="">입찰할 조장</option>
+              </select>
+              <input type="number" id="bidAmount" class="input" min="1" step="10" placeholder="입찰 금액" />
+              <button id="placeBid" class="btn-accent">입찰하기</button>
+            </div>
+            <div class="inline-form">
+              <button id="acceptBid" class="btn-green">낙찰 확정</button>
+              <button id="skipItem" class="btn-warn">해당 경매 건너뛰기</button>
+            </div>
+            <div id="bidError" class="error" style="display:none;"></div>
+            <div id="bidOk" class="ok" style="display:none;"></div>
+          </div>
+        </div>
+
+        <!-- 자율 선택 -->
+        <div class="panel" style="background: rgba(11,16,34,0.5);">
+          <div class="section-title">
+            <h2>자율 선택 단계</h2>
+            <span id="freeJoinBadge" class="badge-muted">대기</span>
+          </div>
+          <div class="inline-form">
+            <select id="freeJoinPlayer">
+              <option value="">남은 선수 선택</option>
+            </select>
+            <select id="freeJoinTeam">
+              <option value="">입단할 팀 선택</option>
+            </select>
+            <button id="doFreeJoin" class="btn-green">선수 팀 배정</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel stack" style="width: 100%">
+
+      <div class="log-section" style="display: flex; gap: 10px; width: 100%;">
+        <!-- 왼쪽: 메모장 영역 -->
+        <div class="memo-area" style="flex: 1; display: flex; flex-direction: column;">
+          <h4>실시간 메모</h4>
+          <textarea id="live-memo" 
+            placeholder="희망팀, 거래협의, 특이사항을 기록하세요" 
+            style="flex-grow: 1; min-height: 150px; resize: vertical; font-size: 16px; font-weight: normal;"></textarea>
+          <button onclick="clearMemo()" style="margin-top: 5px;">메모 초기화</button>
+        </div>
+        
+        <!-- 오른쪽: 진행로그 영역 -->
+        <div class="progress-log-area" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="section-title">
+              <h2>진행 로그</h2>
+          </div>
+          <div id="logView" class="log" aria-live="polite"></div>  
+          <button id="clearLog" class="btn-warn margin-top: 5px;">로그 초기화</button>
+        </div>
+      </div>
+
+    <!-- 우측 패널: 현황 -->
+
+      <div class="section-title">
+        <h2>팀 현황</h2>
+        <span class="pill">초기 포인트: 1,000</span>
+      </div>
+      <div id="teamsPanel" class="scroll-y"></div>
+
+      <div class="divider"></div>
+    </section>
+
+
+      
+
+  </main>
+
+  <footer>
+    메인 대시보드 · 관리자 전용 화면 · 실시간 경매 진행 시뮬레이션
+  </footer>
+
+  <script>
+    // 상태 관리
+    const state = {
+      stage: 'idle', // idle | auction | freeJoin
+      participants: [],
+      teamCount: 4,
+      teamTargetSize: 5,
+      teams: [], // {id, name, captain, members:[], points:1000}
+      captains: [],
+      auctionQueue: [], // [{id, player, status:'queued'|'running'|'done'}] - requester 제거
+      currentAuction: null, // {id, player, currentBid, currentBidder} - requester 제거
+      log: [],
+      nextAuctionId: 1
+    };
+
+    // 유틸리티
+    const $ = (sel) => document.querySelector(sel);
+    const log = (msg) => {
+      const ts = new Date().toLocaleTimeString();
+      state.log.unshift(`[${ts}] ${msg}`);
+      if (state.log.length > 50) state.log = state.log.slice(0, 50);
+      $('#logView').textContent = state.log.join('\n');
+      $('#logView').scrollTop = 0;
+    };
+
+    // 초기화
+    function init() {
+      bindEvents();
+      renderCaptainsSelects();
+      renderStage();
+      renderTeamsPanel();
+      renderSelectors();
+      renderQueue();
+      renderCurrentAuction();
+      log('시스템 시작 - 참가자 입력 후 설정을 적용해주세요');
+    }
+
+    // 이벤트 바인딩
+    function bindEvents() {
+      $('#participantsInput').addEventListener('input', onParticipantsInput);
+      $('#teamCount').addEventListener('change', onTeamCountChange);
+      $('#applyConfig').addEventListener('click', applyConfig);
+      $('#resetAll').addEventListener('click', resetAll);
+
+      $('#startAuction').addEventListener('click', startAuction);
+      $('#endAuction').addEventListener('click', endAuction);
+      $('#startFreeJoin').addEventListener('click', startFreeJoin);
+
+      $('#enqueueAuction').addEventListener('click', enqueueAuction);
+      $('#placeBid').addEventListener('click', placeBid);
+      $('#acceptBid').addEventListener('click', acceptBid);
+      $('#skipItem').addEventListener('click', skipItem);
+      $('#doFreeJoin').addEventListener('click', doFreeJoin);
+      $('#clearLog').addEventListener('click', () => {
+        state.log = [];
+        $('#logView').textContent = '';
+      });
+    }
+
+    // 참가자 입력 처리
+    function onParticipantsInput(e) {
+      const lines = e.target.value.split(/\n+/).map(s => s.trim()).filter(Boolean);
+      state.participants = [...new Set(lines)];
+      $('#participantCount').textContent = state.participants.length;
+      renderCaptainsSelects();
+      renderSelectors();
+    }
+
+    // 팀 수 변경
+    function onTeamCountChange(e) {
+      const newCount = Math.max(2, Math.min(10, parseInt(e.target.value || '4', 10)));
+      state.teamCount = newCount;
+      e.target.value = newCount;
+      while (state.captains.length < newCount) state.captains.push(null);
+      if (state.captains.length > newCount) state.captains = state.captains.slice(0, newCount);
+      renderCaptainsSelects();
+    }
+
+    // 조장 선택 UI 렌더링
+    function renderCaptainsSelects() {
+      const container = $('#captainSelects');
+      container.innerHTML = '';
+      
+      for (let i = 0; i < state.teamCount; i++) {
+        const div = document.createElement('div');
+        div.className = 'stack';
+        
+        const label = document.createElement('label');
+        label.className = 'subtle';
+        label.textContent = `${i + 1}조 조장`;
+        
+        const select = document.createElement('select');
+        select.className = 'input';
+        select.innerHTML = '<option value="">조장 선택</option>';
+        
+        state.participants.forEach(p => {
+          const option = document.createElement('option');
+          option.value = p;
+          option.textContent = p;
+          if (state.captains[i] === p) option.selected = true;
+          select.appendChild(option);
+        });
+        
+        select.addEventListener('change', (e) => {
+          state.captains[i] = e.target.value || null;
+          validateCaptains();
+          renderSelectors();
+        });
+        
+        div.appendChild(label);
+        div.appendChild(select);
+        container.appendChild(div);
+      }
+    }
+
+    // 조장 유효성 검증
+    function validateCaptains() {
+      const validCaptains = state.captains.filter(c => c && c.trim());
+      const uniqueCaptains = [...new Set(validCaptains)];
+      const isValid = validCaptains.length === state.teamCount && 
+                     uniqueCaptains.length === validCaptains.length;
+      
+      $('#captainError').style.display = isValid ? 'none' : 'block';
+      $('#captainOk').style.display = isValid ? 'block' : 'none';
+      
+      if (!isValid && validCaptains.length > 0) {
+        if (uniqueCaptains.length !== validCaptains.length) {
+          $('#captainError').textContent = '중복된 조장이 있습니다.';
+        } else {
+          $('#captainError').textContent = `조장을 ${state.teamCount}명 모두 선택해주세요.`;
+        }
+      }
+      
+      return isValid;
+    }
+
+    // 설정 적용
+    function applyConfig() {
+      if (state.participants.length < 3) {
+        alert('참가자를 최소 3명 이상 입력해주세요.');
+        return;
+      }
+      
+      if (!validateCaptains()) {
+        alert('조장 설정을 완료해주세요.');
+        return;
+      }
+
+      // 팀 생성
+      state.teams = [];
+      for (let i = 0; i < state.teamCount; i++) {
+        const captain = state.captains[i];
+        if (captain) {
+          state.teams.push({
+            id: i + 1,
+            name: `${i + 1}조`,
+            captain: captain,
+            members: [captain],
+            points: 1000
+          });
+        }
+      }
+      
+      renderTeamsPanel();
+      renderSelectors();
+      log(`설정 적용 완료 - ${state.teams.length}개 팀 생성됨`);
+    }
+
+    // 전체 초기화
+    function resetAll() {
+      if (!confirm('모든 설정과 진행상황이 초기화됩니다. 계속하시겠습니까?')) return;
+      
+      Object.assign(state, {
+        stage: 'idle',
+        participants: [],
+        teamCount: 4,
+        teamTargetSize: 5,
+        teams: [],
+        captains: [],
+        auctionQueue: [],
+        currentAuction: null,
+        log: [],
+        nextAuctionId: 1
+      });
+      
+      $('#participantsInput').value = '';
+      $('#participantCount').textContent = '0';
+      $('#teamCount').value = '4';
+      $('#teamTargetSize').value = '5';
+      
+      renderCaptainsSelects();
+      renderStage();
+      renderTeamsPanel();
+      renderSelectors();
+      renderQueue();
+      renderCurrentAuction();
+      $('#logView').textContent = '';
+      
+      log('전체 초기화 완료');
+    }
+
+    // 단계 렌더링
+    function renderStage() {
+      const stageBadge = $('#stageBadge');
+      const auctionState = $('#auctionState');
+      const freeJoinBadge = $('#freeJoinBadge');
+      
+      switch (state.stage) {
+        case 'idle':
+          stageBadge.textContent = '대기';
+          stageBadge.className = 'badge badge-muted';
+          auctionState.textContent = '대기';
+          auctionState.className = 'badge-muted';
+          freeJoinBadge.textContent = '대기';
+          freeJoinBadge.className = 'badge-muted';
+          break;
+        case 'auction':
+          stageBadge.textContent = '경매 진행';
+          stageBadge.className = 'badge badge-soft';
+          auctionState.textContent = '진행 중';
+          auctionState.className = 'badge-soft';
+          freeJoinBadge.textContent = '대기';
+          freeJoinBadge.className = 'badge-muted';
+          break;
+        case 'freeJoin':
+          stageBadge.textContent = '자율 선택';
+          stageBadge.className = 'badge badge-warn';
+          auctionState.textContent = '종료';
+          auctionState.className = 'badge-warn';
+          freeJoinBadge.textContent = '진행 중';
+          freeJoinBadge.className = 'badge-soft';
+          break;
+      }
+    }
+
+    // 셀렉터 렌더링 - 조장 선택 관련 수정
+    function renderSelectors() {
+      const captainOptions = state.teams.map(t => 
+        `<option value="${t.captain}">${t.name} (${t.captain})</option>`
+      ).join('');
+      
+      $('#bidCaptain').innerHTML = '<option value="">입찰할 조장</option>' + captainOptions;
+      
+      // 경매 가능한 선수들 (이미 팀에 속하지 않은 선수)
+      const assignedPlayers = new Set(state.teams.flatMap(t => t.members));
+      const availablePlayers = state.participants.filter(p => !assignedPlayers.has(p));
+      
+      const playerOptions = availablePlayers.map(p => 
+        `<option value="${p}">${p}</option>`
+      ).join('');
+      
+      $('#chooseTarget').innerHTML = '<option value="">매물(선수) 선택</option>' + playerOptions;
+      $('#freeJoinPlayer').innerHTML = '<option value="">남은 선수 선택</option>' + playerOptions;
+      
+      // 팀 옵션
+      const teamOptions = state.teams.map(t => 
+        `<option value="${t.id}">${t.name} (${t.captain}) - ${t.members.length}명</option>`
+      ).join('');
+      $('#freeJoinTeam').innerHTML = '<option value="">입단할 팀 선택</option>' + teamOptions;
+    }
+
+    // 경매 단계 시작
+    function startAuction() {
+      if (state.teams.length === 0) {
+        alert('먼저 팀 설정을 적용해주세요.');
+        return;
+      }
+      
+      state.stage = 'auction';
+      renderStage();
+      log('경매 단계 시작 - 원하는 선수를 경매에 올려주세요');
+    }
+
+    // 경매 단계 종료
+    function endAuction() {
+      if (state.stage !== 'auction') {
+        alert('현재 경매 단계가 아닙니다.');
+        return;
+      }
+      
+      if (state.currentAuction) {
+        if (!confirm('진행 중인 경매가 있습니다. 정말 종료하시겠습니까?')) return;
+        const q = state.auctionQueue.find(x => x.id === state.currentAuction.id);
+        if (q) q.status = 'done';
+        state.currentAuction = null;
+        renderCurrentAuction();
+      }
+      
+      state.stage = 'idle';
+      renderStage();
+      log('경매 단계 종료 - 자율 선택 단계로 전환할 수 있습니다');
+    }
+
+    // 자율 선택 시작
+    function startFreeJoin() {
+      if (state.currentAuction) {
+        alert('진행 중인 경매를 먼저 완료해주세요.');
+        return;
+      }
+      
+      state.stage = 'freeJoin';
+      renderStage();
+      renderSelectors();
+      log('자율 선택 단계 시작 - 남은 선수들이 원하는 팀에 입단할 수 있습니다');
+    }
+
+    // 경매 큐에 추가 - requester 제거
+    function enqueueAuction() {
+      if (state.stage !== 'auction') {
+        alert('경매 단계에서만 매물을 등록할 수 있습니다.');
+        return;
+      }
+      
+      const player = $('#chooseTarget').value;
+      
+      if (!player) {
+        alert('매물(선수)를 선택해주세요.');
+        return;
+      }
+      
+      // 중복 체크
+      const duplicate = state.auctionQueue.some(q => q.player === player && q.status !== 'done');
+      if (duplicate) {
+        alert('이미 경매 큐에 등록된 선수입니다.');
+        return;
+      }
+      
+      // 이미 팀에 속한 선수 체크
+      const alreadyAssigned = state.teams.some(t => t.members.includes(player));
+      if (alreadyAssigned) {
+        alert('이미 팀에 배정된 선수입니다.');
+        return;
+      }
+      
+      const auction = {
+        id: state.nextAuctionId++,
+        player: player,
+        status: 'queued'
+      };
+      
+      state.auctionQueue.push(auction);
+      renderQueue();
+      renderSelectors();
+      log(`경매 등록: ${player}`);
+      
+      // 현재 진행중인 경매가 없으면 자동 시작
+      if (!state.currentAuction) {
+        startNextAuction();
+      }
+    }
+
+    // 큐 렌더링 - 지정 조장 컬럼 제거
+    function renderQueue() {
+      const tbody = $('#auctionQueueBody');
+      tbody.innerHTML = '';
+      
+      state.auctionQueue.forEach((auction, index) => {
+        const row = document.createElement('tr');
+        
+        let statusText = auction.status;
+        let statusClass = 'badge-muted';
+        if (auction.status === 'running') {
+          statusText = '진행중';
+          statusClass = 'badge-soft';
+        } else if (auction.status === 'done') {
+          statusText = '완료';
+          statusClass = 'badge-warn';
+        }
+        
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${auction.player}</td>
+          <td><span class="${statusClass}">${statusText}</span></td>
+          <td>
+            ${auction.status === 'queued' ? 
+              `<button class="btn-danger btn-mini" onclick="removeFromQueue(${auction.id})">제거</button>` : 
+              '-'
+            }
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+    }
+
+    // 큐에서 제거
+    function removeFromQueue(auctionId) {
+      const index = state.auctionQueue.findIndex(q => q.id === auctionId);
+      if (index === -1) return;
+      
+      const auction = state.auctionQueue[index];
+      if (auction.status !== 'queued') {
+        alert('대기 상태의 경매만 제거할 수 있습니다.');
+        return;
+      }
+      
+      state.auctionQueue.splice(index, 1);
+      renderQueue();
+      log(`경매 제거: ${auction.player}`);
+    }
+
+    // 다음 경매 시작
+    function startNextAuction() {
+      const nextAuction = state.auctionQueue.find(q => q.status === 'queued');
+      if (!nextAuction) {
+        $('#currentAuctionBadge').textContent = '없음';
+        $('#currentAuctionBadge').className = 'badge-muted';
+        renderCurrentAuction();
+        log('대기 중인 경매가 없습니다');
+        return;
+      }
+      
+      nextAuction.status = 'running';
+      state.currentAuction = {
+        id: nextAuction.id,
+        player: nextAuction.player,
+        currentBid: 0,
+        currentBidder: null
+      };
+      
+      $('#currentAuctionBadge').textContent = '진행중';
+      $('#currentAuctionBadge').className = 'badge-soft';
+      
+      renderQueue();
+      renderCurrentAuction();
+      log(`경매 시작: ${nextAuction.player}`);
+    }
+
+    // 현재 경매 렌더링 - 지정자 제거
+    function renderCurrentAuction() {
+      const ca = state.currentAuction;
+      $('#currentPlayer').textContent = ca ? ca.player : '-';
+      $('#currentBid').textContent = ca ? ca.currentBid.toLocaleString() : '0';
+      $('#currentBidder').textContent = ca && ca.currentBidder ? ca.currentBidder : '-';
+      
+      if (ca && ca.currentBid > 0) {
+        $('#bidAmount').placeholder = `${ca.currentBid + 10} 이상`;
+        $('#bidAmount').min = ca.currentBid + 1;
+      } else {
+        $('#bidAmount').placeholder = '입찰 금액';
+        $('#bidAmount').min = 1;
+      }
+      
+      $('#bidError').style.display = 'none';
+      $('#bidOk').style.display = 'none';
+    }
+
+    // 입찰
+    function placeBid() {
+      if (!state.currentAuction) {
+        showBidError('진행 중인 경매가 없습니다.');
+        return;
+      }
+      
+      const captain = $('#bidCaptain').value;
+      const amount = parseInt($('#bidAmount').value || '0', 10);
+      
+      if (!captain) {
+        showBidError('입찰할 조장을 선택해주세요.');
+        return;
+      }
+      
+      if (isNaN(amount) || amount <= 0) {
+        showBidError('올바른 입찰 금액을 입력해주세요.');
+        return;
+      }
+      
+      if (amount <= state.currentAuction.currentBid) {
+        showBidError(`현재가(${state.currentAuction.currentBid})보다 높은 금액을 입력해주세요.`);
+        return;
+      }
+      
+      const team = state.teams.find(t => t.captain === captain);
+      if (!team) {
+        showBidError('유효하지 않은 조장입니다.');
+        return;
+      }
+      
+      if (team.points < amount) {
+        showBidError(`잔여 포인트(${team.points})가 부족합니다.`);
+        return;
+      }
+      
+      if (team.members.length >= state.teamTargetSize) {
+        if (!confirm(`${team.name}은 이미 목표 인원(${state.teamTargetSize}명)에 도달했습니다. 계속 입찰하시겠습니까?`)) {
+          return;
+        }
+      }
+      
+      state.currentAuction.currentBid = amount;
+      state.currentAuction.currentBidder = captain;
+      
+      renderCurrentAuction();
+      showBidOk(`${captain} 입찰: ${amount.toLocaleString()}p`);
+      log(`입찰: ${captain} → ${state.currentAuction.player} @ ${amount.toLocaleString()}p`);
+      
+      $('#bidAmount').value = '';
+    }
+
+    // 낙찰
+    function acceptBid() {
+      if (!state.currentAuction) {
+        alert('진행 중인 경매가 없습니다.');
+        return;
+      }
+      
+      if (!state.currentAuction.currentBidder) {
+        alert('입찰자가 없습니다. 먼저 입찰을 진행해주세요.');
+        return;
+      }
+      
+      const { currentBid, currentBidder, player, id } = state.currentAuction;
+      const team = state.teams.find(t => t.captain === currentBidder);
+      
+      if (!team) {
+        alert('유효하지 않은 팀입니다.');
+        return;
+      }
+      
+      team.points -= currentBid;
+      if (!team.members.includes(player)) {
+        team.members.push(player);
+      }
+      
+      const queueItem = state.auctionQueue.find(q => q.id === id);
+      if (queueItem) queueItem.status = 'done';
+      
+      state.currentAuction = null;
+      
+      renderTeamsPanel();
+      renderQueue();
+      renderCurrentAuction();
+      renderSelectors();
+      
+      log(`낙찰: ${player} → ${team.name}(${team.captain}) @ ${currentBid.toLocaleString()}p`);
+      
+      setTimeout(startNextAuction, 500);
+    }
+
+    // 경매 건너뛰기
+    function skipItem() {
+      if (!state.currentAuction) {
+        alert('진행 중인 경매가 없습니다.');
+        return;
+      }
+      
+      const { player, id } = state.currentAuction;
+      const queueItem = state.auctionQueue.find(q => q.id === id);
+      if (queueItem) queueItem.status = 'done';
+      
+      state.currentAuction = null;
+      
+      renderQueue();
+      renderCurrentAuction();
+      
+      log(`경매 건너뛰기: ${player}`);
+      
+      setTimeout(startNextAuction, 500);
+    }
+
+    // 자율 선택
+    function doFreeJoin() {
+      if (state.stage !== 'freeJoin') {
+        alert('자율 선택 단계에서만 사용할 수 있습니다.');
+        return;
+      }
+      
+      const player = $('#freeJoinPlayer').value;
+      const teamId = parseInt($('#freeJoinTeam').value || '0', 10);
+      
+      if (!player || !teamId) {
+        alert('선수와 팀을 모두 선택해주세요.');
+        return;
+      }
+      
+      const team = state.teams.find(t => t.id === teamId);
+      if (!team) {
+        alert('유효하지 않은 팀입니다.');
+        return;
+      }
+      
+      if (team.members.includes(player)) {
+        alert('이미 해당 팀에 속한 선수입니다.');
+        return;
+      }
+      
+      team.members.push(player);
+      
+      renderTeamsPanel();
+      renderSelectors();
+      
+      log(`자율 선택: ${player} → ${team.name}(${team.captain})`);
+    }
+
+    // 팀 패널 렌더링
+    function renderTeamsPanel() {
+      const panel = $('#teamsPanel');
+      
+      if (state.teams.length === 0) {
+        panel.innerHTML = '<div class="hint">팀 설정을 적용하면 여기에 팀 현황이 표시됩니다.</div>';
+        return;
+      }
+      
+      panel.innerHTML = '';
+      
+      state.teams.forEach(team => {
+        const teamDiv = document.createElement('div');
+        teamDiv.className = 'panel';
+        teamDiv.style.background = 'rgba(11,16,34,0.3)';
+        teamDiv.style.marginBottom = '8px';
+        
+        const memberList = team.members.map(m => 
+          `<tr><td>${m}${m === team.captain ? ' (조장)' : ''}</td></tr>`
+        ).join('');
+        
+        teamDiv.innerHTML = `
+          <div class="row" style="justify-content: space-between; margin-bottom: 8px;">
+            <div class="row" style="gap: 8px;">
+              <span class="pill">${team.name}</span>
+              <span class="chip">조장: ${team.captain}</span>
+            </div>
+            <div class="row" style="gap: 8px;">
+              <span class="chip">포인트: <strong>${team.points.toLocaleString()}</strong>p</span>
+              <span class="chip">인원: <strong>${team.members.length}</strong>명</span>
+            </div>
+          </div>
+          <table class="table" style="font-size: 12px;">
+            <thead><tr><th>구성원 (${team.members.length}명)</th></tr></thead>
+            <tbody>${memberList}</tbody>
+          </table>
+        `;
+        
+        panel.appendChild(teamDiv);
+      });
+    }
+
+    // 에러/성공 메시지 표시
+    function showBidError(msg) {
+      $('#bidError').textContent = msg;
+      $('#bidError').style.display = 'block';
+      $('#bidOk').style.display = 'none';
+    }
+
+    function showBidOk(msg) {
+      $('#bidOk').textContent = msg;
+      $('#bidOk').style.display = 'block';
+      $('#bidError').style.display = 'none';
+    }
+
+    // 전역 함수로 노출
+    window.removeFromQueue = removeFromQueue;
+
+    // 초기화 실행
+    init();
+  </script>
+</body>
+</html>
