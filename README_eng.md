@@ -17,8 +17,8 @@ A simulation tool where 20 participants form teams through auction mechanics. Te
 
 1. **Download Files**
    ```bash
-   git clone https://github.com/your-username/team-draft-auction
-   cd team-draft-auction
+   git clone https://github.com/fillgeun/Saenatae_dashboard.git
+   cd Saenatae_dashboard
    ```
 
 2. **Run in Browser**

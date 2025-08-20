@@ -20,8 +20,8 @@ On the Internet broadcast, we created a dashboard for team allocation auctions b
 
 1. **파일 다운로드**
    ```bash
-   git clone https://github.com/your-username/team-draft-auction
-   cd team-draft-auction
+   git clone https://github.com/fillgeun/Saenatae_dashboard.git
+   cd Saenatae_dashboard
    ```
 
 2. **브라우저에서 실행**
